@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+@theme {
+  --color-coffee: #4B2E2B;
+  --color-mocha: #6F4E37;
+  --color-caramel: #C19A6B;
+  --color-cream: #F5EFE6;
+}
+
+@utility shadow-card {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-cream);
+  color: #2b1e1c;
+}
+
+.card {
+  @apply rounded-2xl bg-white shadow-card border border-[rgba(0,0,0,0.06)];
+}
+
+.chip {
+  @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium;
+}
+
+.chip-success {
+  @apply bg-green-100 text-green-700;
+}
+
+.chip-warn {
+  @apply bg-amber-100 text-amber-700;
+}
+
+.chip-danger {
+  @apply bg-red-100 text-red-700;
+}
+
+.sidebar-link {
+  @apply flex items-center gap-3 px-4 py-3 rounded-xl text-cream/85 hover:text-white hover:bg-white/10 transition-colors;
+}
+
+.sidebar-link.active {
+  @apply bg-white/10 text-white ring-1 ring-white/10;
+}
+
+.center {
+  @apply min-h-screen flex items-center justify-center p-6;
+  background:
+    radial-gradient(900px circle at 30% 25%, rgba(193, 154, 107, 0.25), transparent 55%),
+    radial-gradient(700px circle at 80% 70%, rgba(111, 78, 55, 0.35), transparent 55%),
+    linear-gradient(135deg, #2f1c1a, #3e2723 55%, #251412);
+}
+
+.authCard { @apply w-full max-w-sm; }
+
+.logo { @apply text-center mb-3 text-coffee font-extrabold; }
+
+.inputLabel { @apply block text-sm text-coffee/70 mb-1; }
+
+.inputGroup { @apply w-full; }
+
+.input { @apply w-full px-3 py-2.5 rounded-xl bg-white border border-black/10 outline-none focus:ring-2 focus:ring-caramel/50; }
+
+.button { @apply inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-medium transition-colors; }
+
+.buttonPrimary { background-color: var(--color-caramel); color: var(--color-cream); }
+.buttonPrimary:hover { filter: brightness(0.95); }
+
+.buttonFull { @apply w-full; }
+
+.error { @apply text-sm text-red-700; }
