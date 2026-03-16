@@ -1,19 +1,19 @@
- 'use client'
- 
+'use client'
+
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Building2, CreditCard, Users2, FileBarChart2, Settings, Menu } from 'lucide-react'
+import { LayoutDashboard, FileBarChart2, Users2, UtensilsCrossed, Store, Settings, Menu } from 'lucide-react'
 
 const nav = [
-  { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-  { label: 'Businesses', href: '/admin/businesses', icon: Building2 },
-  { label: 'Subscriptions', href: '/admin/subscriptions', icon: CreditCard },
-  { label: 'Users', href: '/admin/users', icon: Users2 },
-  { label: 'Reports', href: '/admin/reports', icon: FileBarChart2 },
-  { label: 'System Settings', href: '/admin/settings', icon: Settings },
+  { label: 'Dashboard', href: '/owner', icon: LayoutDashboard },
+  { label: 'Sales Reports', href: '/owner/reports', icon: FileBarChart2 },
+  { label: 'Employees', href: '/owner/employees', icon: Users2 },
+  { label: 'Menu', href: '/owner/menu', icon: UtensilsCrossed },
+  { label: 'Stores', href: '/owner/stores', icon: Store },
+  { label: 'Settings', href: '/owner/settings', icon: Settings },
 ]
 
-export function Sidebar({ expanded = false, onToggle }: { expanded?: boolean; onToggle?: () => void }) {
+export function OwnerSidebar({ expanded = false, onToggle }: { expanded?: boolean; onToggle?: () => void }) {
   const pathname = usePathname()
   return (
     <aside
@@ -28,9 +28,7 @@ export function Sidebar({ expanded = false, onToggle }: { expanded?: boolean; on
           const isRootItem = href.split('/').filter(Boolean).length === 1
           const active = pathname === href || (!isRootItem && pathname.startsWith(`${href}/`))
           return (
-            <Link
-              key={href}
-              href={href}
+            <Link key={href} href={href} 
               className={`group relative flex items-center h-14 w-full rounded-2xl transition-all duration-200 ${
                 active ? 'bg-black/5' : 'hover:bg-black/5'
               }`}

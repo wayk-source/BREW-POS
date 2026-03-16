@@ -74,3 +74,39 @@ body {
 .buttonFull { @apply w-full; }
 
 .error { @apply text-sm text-red-700; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.animate-float { animation: float 6s ease-in-out infinite; }
+
+@keyframes float-delayed {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+.animate-float-delayed { animation: float-delayed 6s ease-in-out infinite 1.5s; }
+
+@keyframes bg-pan {
+  0% { background-position: 20% 20%; }
+  100% { background-position: 80% 80%; }
+}
+.animate-bg-pan { animation: bg-pan 18s ease-in-out infinite alternate; }
+
+@keyframes bounce-soft {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+.animate-bounce-soft { animation: bounce-soft 5.5s ease-in-out infinite; }
+
+@keyframes sidebar-in {
+  0% { transform: translateX(-12px); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+.animate-sidebar-in { animation: sidebar-in 0.28s ease-out both; }
+
+@keyframes icon-pop {
+  0% { transform: translateY(6px) scale(0.96); opacity: 0; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+.animate-icon-pop { animation: icon-pop 0.32s cubic-bezier(.2,.8,.2,1) both; }

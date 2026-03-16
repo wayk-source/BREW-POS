@@ -1,19 +1,19 @@
- 'use client'
- 
+'use client'
+
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Building2, CreditCard, Users2, FileBarChart2, Settings, Menu } from 'lucide-react'
+import { LayoutDashboard, Receipt, UtensilsCrossed, Banknote, Users2, Settings } from 'lucide-react'
 
 const nav = [
-  { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-  { label: 'Businesses', href: '/admin/businesses', icon: Building2 },
-  { label: 'Subscriptions', href: '/admin/subscriptions', icon: CreditCard },
-  { label: 'Users', href: '/admin/users', icon: Users2 },
-  { label: 'Reports', href: '/admin/reports', icon: FileBarChart2 },
-  { label: 'System Settings', href: '/admin/settings', icon: Settings },
+  { label: 'Dashboard', href: '/manager', icon: LayoutDashboard },
+  { label: 'Transactions', href: '/manager/transactions', icon: Receipt },
+  { label: 'Menu & Stock', href: '/manager/menu', icon: UtensilsCrossed },
+  { label: 'Cash Oversight', href: '/manager/cash', icon: Banknote },
+  { label: 'Staff', href: '/manager/staff', icon: Users2 },
+  { label: 'Settings', href: '/manager/settings', icon: Settings },
 ]
 
-export function Sidebar({ expanded = false, onToggle }: { expanded?: boolean; onToggle?: () => void }) {
+export function ManagerSidebar({ expanded = false, onToggle }: { expanded?: boolean; onToggle?: () => void }) {
   const pathname = usePathname()
   return (
     <aside
@@ -22,15 +22,12 @@ export function Sidebar({ expanded = false, onToggle }: { expanded?: boolean; on
       }`}
       aria-expanded={expanded}
     >
-
       <nav className="flex-1 flex flex-col gap-2 px-3 py-3 overflow-y-auto overflow-x-hidden">
         {nav.map(({ label, href, icon: Icon }, idx) => {
           const isRootItem = href.split('/').filter(Boolean).length === 1
           const active = pathname === href || (!isRootItem && pathname.startsWith(`${href}/`))
           return (
-            <Link
-              key={href}
-              href={href}
+            <Link key={href} href={href} 
               className={`group relative flex items-center h-14 w-full rounded-2xl transition-all duration-200 ${
                 active ? 'bg-black/5' : 'hover:bg-black/5'
               }`}

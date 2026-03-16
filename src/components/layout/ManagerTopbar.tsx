@@ -1,14 +1,15 @@
-import { Bell, Search, Menu, User, LogOut, Settings } from 'lucide-react'
+'use client'
+
+import { Bell, Menu, User, LogOut, Settings } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { BrewPosLogo } from '../ui/BrewPosLogo'
 import Link from 'next/link'
 
-export function Topbar({ expanded, onToggle }: { expanded?: boolean; onToggle?: () => void }) {
+export function ManagerTopbar({ expanded, onToggle }: { expanded?: boolean; onToggle?: () => void }) {
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
   const today = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'UTC',
     weekday: 'long',
     month: 'long',
     day: 'numeric',
@@ -65,12 +66,12 @@ export function Topbar({ expanded, onToggle }: { expanded?: boolean; onToggle?: 
             {showProfileMenu && (
               <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-xl border border-black/5 p-2 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
                 <div className="px-3 py-2 border-b border-black/5 mb-1">
-                  <p className="text-sm font-semibold text-coffee">Admin User</p>
-                  <p className="text-xs text-coffee/60">admin@brewpos.com</p>
+                  <p className="text-sm font-semibold text-coffee">Store Manager</p>
+                  <p className="text-xs text-coffee/60">manager@brewpos.com</p>
                 </div>
                 
                 <Link 
-                  href="/admin/settings" 
+                  href="/manager/settings" 
                   className="flex items-center gap-2 px-3 py-2 text-sm text-coffee/80 hover:bg-black/5 rounded-xl transition-colors"
                   onClick={() => setShowProfileMenu(false)}
                 >
@@ -79,7 +80,7 @@ export function Topbar({ expanded, onToggle }: { expanded?: boolean; onToggle?: 
                 </Link>
                 
                 <Link 
-                  href="/admin/login" 
+                  href="/manager/login" 
                   className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-xl transition-colors mt-1"
                 >
                   <LogOut className="h-4 w-4" />

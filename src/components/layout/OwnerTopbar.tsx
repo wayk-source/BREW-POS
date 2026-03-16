@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react'
 import { BrewPosLogo } from '../ui/BrewPosLogo'
 import Link from 'next/link'
 
-export function Topbar({ expanded, onToggle }: { expanded?: boolean; onToggle?: () => void }) {
+export function OwnerTopbar({ expanded, onToggle }: { expanded?: boolean; onToggle?: () => void }) {
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -65,12 +65,12 @@ export function Topbar({ expanded, onToggle }: { expanded?: boolean; onToggle?: 
             {showProfileMenu && (
               <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-xl border border-black/5 p-2 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
                 <div className="px-3 py-2 border-b border-black/5 mb-1">
-                  <p className="text-sm font-semibold text-coffee">Admin User</p>
-                  <p className="text-xs text-coffee/60">admin@brewpos.com</p>
+                  <p className="text-sm font-semibold text-coffee">Business Owner</p>
+                  <p className="text-xs text-coffee/60">owner@brewpos.com</p>
                 </div>
                 
                 <Link 
-                  href="/admin/settings" 
+                  href="/owner/settings" 
                   className="flex items-center gap-2 px-3 py-2 text-sm text-coffee/80 hover:bg-black/5 rounded-xl transition-colors"
                   onClick={() => setShowProfileMenu(false)}
                 >
@@ -79,7 +79,7 @@ export function Topbar({ expanded, onToggle }: { expanded?: boolean; onToggle?: 
                 </Link>
                 
                 <Link 
-                  href="/admin/login" 
+                  href="/owner/login" 
                   className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-xl transition-colors mt-1"
                 >
                   <LogOut className="h-4 w-4" />

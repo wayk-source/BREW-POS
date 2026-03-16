@@ -29,6 +29,10 @@ export default function Login() {
       setError('Invalid email or password.');
       return;
     }
+    if (user.role === 'admin') {
+      setError('Please sign in via the admin login at /admin/login.')
+      return
+    }
     setSession(user);
     // Redirect based on role
     if (user.role === 'owner') return router.replace('/owner');
