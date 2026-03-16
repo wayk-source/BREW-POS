@@ -14,10 +14,20 @@ interface CartPanelProps {
   total: number
   onUpdateQuantity: (itemId: string, newQuantity: number) => void
   onRemoveItem: (itemId: string) => void
+  onClearCart: () => void
   onCheckout: () => void
 }
 
-export function CartPanel({ cart, subtotal, tax, total, onUpdateQuantity, onRemoveItem, onCheckout }: CartPanelProps) {
+export function CartPanel({
+  cart,
+  subtotal,
+  tax,
+  total,
+  onUpdateQuantity,
+  onRemoveItem,
+  onClearCart,
+  onCheckout,
+}: CartPanelProps) {
   return (
     <div className="flex h-[40vh] w-full flex-col border-t border-[#4B2E2B]/10 bg-white shadow-xl md:h-full md:w-96 md:border-l md:border-t-0">
       {/* Header */}
@@ -26,9 +36,19 @@ export function CartPanel({ cart, subtotal, tax, total, onUpdateQuantity, onRemo
           <ShoppingBag className="h-6 w-6 text-[#6F4E37]" />
           Current Order
         </h2>
-        <span className="rounded-full bg-[#6F4E37]/10 px-3 py-1 text-xs font-medium text-[#6F4E37]">
-          Order #1234
-        </span>
+        <div className="flex items-center gap-2">
+          {cart.length > 0 && (
+            <button
+              onClick={onClearCart}
+              className="text-xs font-medium text-red-500 hover:text-red-600 transition-colors underline-offset-4 hover:underline"
+            >
+              Clear All
+            </button>
+          )}
+          <span className="rounded-full bg-[#6F4E37]/10 px-3 py-1 text-xs font-medium text-[#6F4E37]">
+            Order #1234
+          </span>
+        </div>
       </div>
 
       {/* Cart Items */}
