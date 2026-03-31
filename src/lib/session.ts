@@ -1,17 +1,26 @@
-import type { Role, User } from '../../lib/auth'
+import type { User, Role } from '../types'
+import { getCurrentSessionUser } from './auth'
 
-export function getSession(): User | null {
-  if (typeof window === 'undefined') return null
-  try {
-    const raw = localStorage.getItem('session')
-    return raw ? (JSON.parse(raw) as User) : null
-  } catch {
-    return null
-  }
+/**
+ * Get current user from Supabase session
+ */
+export async function getSession(): Promise<User | null> {
+  const user = await getCurrentSessionUser()
+  return user
 }
 
-export function getSessionRole(): Role | null {
-  const s = getSession()
-  return s?.role ?? null
+/**
+ * Get current user's role from Supabase session
+ */
+export async function getSessionRole(): Promise<Role | null> {
+  const user = await getSession()
+  return user?.role ?? null
 }
 
+/**
+ * Check if user is authenticated
+ */
+export async function isAuthenticated(): Promise<boolean> {
+  const user = await getSession()
+  return user !== null
+}

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Montserrat } from 'next/font/google';
 import { Eye, EyeOff, Lock, Mail, Shield } from 'lucide-react';
-import { authenticate, setSession } from '@/lib/auth';
+import { authenticate } from '@/lib/auth';
 
 const brandFont = Montserrat({
   subsets: ['latin'],
@@ -29,7 +29,7 @@ export default function AdminLogin() {
       setError('Admin access only. Please use an admin account.')
       return
     }
-    setSession(user)
+    // Supabase session is automatically set
     router.replace('/admin');
   }
 
@@ -41,21 +41,13 @@ export default function AdminLogin() {
             <div>
               <div className={`text-2xl tracking-wide ${brandFont.className}`}>BREW POS</div>
               <div className="mt-2 text-sm text-cream/80">
-                Admin access for platform configuration, compliance, and monitoring.
+                Welcome to BREW POS, the all-in-one solution for your cafe.
               </div>
-              <div className="mt-6 grid gap-3 text-sm">
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/10">
-                    <Shield className="h-4 w-4" />
-                  </span>
-                  <span className="text-cream/90">System administration portal</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/10">
-                    <Lock className="h-4 w-4" />
-                  </span>
-                  <span className="text-cream/90">Role-restricted authentication</span>
-                </div>
+              <div className="mt-6 text-sm">
+                Create an account to get started.
+              </div>
+              <div className="mt-4">
+                <button className="button buttonSecondary">Sign up</button>
               </div>
             </div>
             <div className="text-xs text-cream/65">
@@ -74,13 +66,15 @@ export default function AdminLogin() {
 
             <form onSubmit={onSubmit} className="mt-7 space-y-4">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-coffee/80">Email</label>
-                <div className="relative mt-1.5">
-                  <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-coffee/45" />
+                <label htmlFor="email" className="flex items-center gap-2 text-sm font-medium text-coffee/80">
+                  <Mail className="h-4 w-4 text-coffee/45" />
+                  Email
+                </label>
+                <div className="mt-1.5">
                   <input
                     id="email"
                     type="email"
-                    className="input pl-10 bg-cream/50"
+                    className="input bg-cream/50"
                     placeholder="admin@example.com"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
@@ -90,13 +84,15 @@ export default function AdminLogin() {
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-coffee/80">Password</label>
+                <label htmlFor="password" className="flex items-center gap-2 text-sm font-medium text-coffee/80">
+                  <Lock className="h-4 w-4 text-coffee/45" />
+                  Password
+                </label>
                 <div className="relative mt-1.5">
-                  <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-coffee/45" />
                   <input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
-                    className="input pl-10 pr-10 bg-cream/50"
+                    className="input bg-cream/50 pr-10"
                     placeholder="Enter your password"
                     value={password}
                     onChange={e => setPassword(e.target.value)}

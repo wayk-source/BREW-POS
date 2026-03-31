@@ -1,3 +1,5 @@
+import { getProducts, getSalesHistory, getEmployees } from './supabase-db'
+import type { Product, SaleRecord, Employee } from '../types/supabase'
 
 export interface Transaction {
   id: string
@@ -39,6 +41,7 @@ export interface AuditLog {
   severity: 'low' | 'medium' | 'high'
 }
 
+// Mock data for development
 export const transactions: Transaction[] = [
   { id: 'TRX-1001', date: '2026-03-13', time: '08:12 AM', cashier: 'Michael Chen', items: 'Latte, Croissant', total: 320, paymentMethod: 'Cash', status: 'Completed' },
   { id: 'TRX-1002', date: '2026-03-13', time: '08:15 AM', cashier: 'Michael Chen', items: 'Cappuccino', total: 180, paymentMethod: 'GCash', status: 'Completed' },
@@ -147,3 +150,26 @@ export const auditLogs: AuditLog[] = [
   { id: 'log4', timestamp: '2026-03-13 09:15:22', action: 'Cash Drawer Open', user: 'Michael Chen', details: 'Manual open', severity: 'medium' },
   { id: 'log5', timestamp: '2026-03-13 09:30:10', action: 'System Login', user: 'David Kim', details: 'Manager login detected', severity: 'low' },
 ]
+
+// ============ Supabase Integration ============
+
+/**
+ * Fetch products from Supabase
+ */
+export async function fetchProducts(businessId: number): Promise<Product[]> {
+  return getProducts(businessId)
+}
+
+/**
+ * Fetch sales history from Supabase
+ */
+export async function fetchSales(businessId: number, limit?: number): Promise<SaleRecord[]> {
+  return getSalesHistory(businessId, limit)
+}
+
+/**
+ * Fetch employees from Supabase
+ */
+export async function fetchStaff(businessId: number): Promise<Employee[]> {
+  return getEmployees(businessId)
+}

@@ -1,3 +1,6 @@
+import { getBusinessById, getEmployees, getProducts, createProduct, updateProduct, deleteProduct, getSalesHistory, addEmployee, deleteEmployee } from './supabase-db'
+import type { Product } from '../types/supabase'
+
 export type StoreStatus = 'Active' | 'Inactive'
 export type EmployeeRole = 'Owner' | 'Manager' | 'Cashier'
 export type EmployeeStatus = 'Active' | 'Suspended'
@@ -254,3 +257,82 @@ export const topByCategoryToday = [
   { category: 'Tea', item: 'Matcha Latte', qty: 52 },
   { category: 'Snack', item: 'Butter Croissant', qty: 63 },
 ]
+
+// ============ Supabase Integration ============
+
+/**
+ * Fetch business details by ID from Supabase
+ */
+export async function fetchBusinessDetails(businessId: number) {
+  return getBusinessById(businessId)
+}
+
+/**
+ * Fetch employees for a business from Supabase
+ */
+export async function fetchEmployeesForBusiness(businessId: number) {
+  return getEmployees(businessId)
+}
+
+/**
+ * Fetch products for a business from Supabase
+ */
+export async function fetchProductsForBusiness(businessId: number) {
+  return getProducts(businessId)
+}
+
+/**
+ * Add a new employee (manager or cashier)
+ */
+export async function addNewEmployee(
+  businessId: number,
+  role: 'manager' | 'cashier',
+  username: string,
+  password: string
+) {
+  return addEmployee(businessId, role, username, password)
+}
+
+/**
+ * Remove an employee
+ */
+export async function removeEmployee(role: 'manager' | 'cashier', employeeId: number) {
+  return deleteEmployee(role, employeeId)
+}
+
+/**
+ * Create a new product
+ */
+export async function createNewProduct(
+  businessId: number,
+  name: string,
+  price: number,
+  size?: string,
+  categoryId?: number
+) {
+  return createProduct(businessId, name, price, size, categoryId)
+}
+
+/**
+ * Update an existing product
+ */
+export async function updateExistingProduct(
+  productId: number,
+  updates: Partial<Pick<Product, 'item_name' | 'item_size' | 'item_price' | 'category_id'>>
+) {
+  return updateProduct(productId, updates)
+}
+
+/**
+ * Delete a product
+ */
+export async function deleteExistingProduct(productId: number) {
+  return deleteProduct(productId)
+}
+
+/**
+ * Fetch sales history for a business
+ */
+export async function fetchSalesHistoryForBusiness(businessId: number, limit?: number) {
+  return getSalesHistory(businessId, limit)
+}

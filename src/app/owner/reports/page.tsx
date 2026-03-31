@@ -20,9 +20,19 @@ function toCsv(rows: Record<string, string | number>[]) {
 }
 
 export default function OwnerReportsPage() {
-  const role = getSessionRole() ?? 'owner'
+  const [role, setRole] = useState('owner')
   const canViewFinancials = role === 'owner'
   const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    async function fetchRole() {
+      const currentRole = await getSessionRole()
+      if (currentRole) {
+        setRole(currentRole)
+      }
+    }
+    fetchRole()
+  }, [])
 
   const [preset, setPreset] = useState<RangePreset>('Last 7 days')
   const [storeId, setStoreId] = useState<'All' | string>('All')

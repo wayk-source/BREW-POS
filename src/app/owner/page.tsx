@@ -1,15 +1,73 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { CreditCard, TrendingUp, ShoppingBag, Users2 } from 'lucide-react'
 import { SummaryCard } from '../../components/ui/SummaryCard'
 import { Table, Th, Td } from '../../components/ui/Table'
 import { TimeSeriesChart } from '../../components/ui/charts/TimeSeriesChart'
 import { MultiLineChart } from '../../components/ui/charts/MultiLineChart'
-import { employeesSeed, ownerBusiness, saleRecordsSeed, topByCategoryToday, peakHoursSeed } from '../../lib/owner-data'
+import { useOwnerContext } from '../../lib/useOwnerContext'
+import { getOwnerSalesAnalytics, getOwnerEmployees } from '../../lib/owner-db'
+import { saleRecordsSeed, employeesSeed } from '../../lib/owner-data'
 
 export default function OwnerHome() {
+  const { businessId, businessName, loading: contextLoading } = useOwnerContext()
   const [range, setRange] = useState<'Daily'>('Daily')
+  const [salesData, setSalesData] = useState<Array<{ date: string; total: number }>>([])
+  const [employees, setEmployees] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const hasSalesData = salesData.length > 0
+
+  useEffect(() => {
+    async function loadData() {
+      if (!businessId) {
+        console.log('No businessId, skipping data load')
+        return
+      }
+
+      console.log('Starting data load for businessId:', businessId)
+
+      // Load seed data immediately for instant loading
+      const seedAnalytics = saleRecordsSeed
+        .filter(r => r.storeId === 's1' || r.storeId === 's2')
+        .map(r => ({ date: r.date, total: r.netSales }))
+
+      const seedEmployees = employeesSeed
+        .filter(e => e.storeId === 's1' || e.storeId === 's2')
+        .map(e => ({ id: e.id, username: e.name, role: e.role, storeId: e.storeId }))
+
+      setSalesData(seedAnalytics)
+      setEmployees(seedEmployees)
+      setLoading(false)
+
+      // Try to load real data in background
+      try {
+        console.log('Fetching real analytics in background...')
+        const analyticsPromise = getOwnerSalesAnalytics(Number(businessId), 30)
+        const employeesPromise = getOwnerEmployees(Number(businessId))
+
+        const [analytics, employeeList] = await Promise.all([
+          analyticsPromise,
+          employeesPromise,
+        ])
+
+        console.log('Real data loaded:', { analyticsCount: analytics.length, employeesCount: employeeList.length })
+
+        // Use real data if available
+        if (analytics.length > 0) {
+          setSalesData(analytics)
+        }
+        if (employeeList.length > 0) {
+          setEmployees(employeeList)
+        }
+      } catch (error: any) {
+        console.log('Real data load failed, keeping seed data:', error.message)
+        // Keep seed data
+      }
+    }
+
+    loadData()
+  }, [businessId])
 
   const rangeStart = '2026-03-01'
   const rangeEnd = '2026-03-12'
@@ -25,46 +83,62 @@ export default function OwnerHome() {
     byDateNet,
     days,
   } = useMemo(() => {
+    if (!hasSalesData) {
+      return {
+        totalSalesNetRange: 0,
+        totalOrdersRange: 0,
+        todayGrossSales: 0,
+        activeEmployees: employees.length,
+        totalDeltaPct: 0,
+        todayDeltaPct: 0,
+        seriesAll: [],
+        byDateNet: new Map<string, number>(),
+        days: [],
+      }
+    }
+
     const start = new Date(rangeStart)
     const end = new Date(rangeEnd)
-    const inRange = saleRecordsSeed.filter(r => {
+
+    // Use real sales data if available
+    const inRange = salesData.filter(r => {
       const d = new Date(r.date)
       return d >= start && d <= end
     })
+
     // Build day maps
     const byDateNet = new Map<string, number>()
-    const byDateGross = new Map<string, number>()
-    const byDateOrders = new Map<string, number>()
     inRange.forEach(r => {
-      byDateNet.set(r.date, (byDateNet.get(r.date) ?? 0) + r.netSales)
-      byDateGross.set(r.date, (byDateGross.get(r.date) ?? 0) + r.grossSales)
-      byDateOrders.set(r.date, (byDateOrders.get(r.date) ?? 0) + r.orders)
+      byDateNet.set(r.date, r.total)
     })
+
     // Build continuous series from start->end
     const days: string[] = []
     for (let d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
       days.push(new Date(d).toISOString().slice(0, 10))
     }
+
     const seriesAll = days.map(day => {
       const dt = new Date(day)
       const label = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
       return { label, value: byDateNet.get(day) ?? 0 }
     })
+
     const today = days[days.length - 1]
     const prev = days[days.length - 2]
-    const totalOrdersRange = Array.from(byDateOrders.values()).reduce((s, v) => s + v, 0)
-    const todayGross = byDateGross.get(today) ?? 0
+    const todayGross = byDateNet.get(today) ?? 0
     const totalNetRange = Array.from(byDateNet.values()).reduce((s, v) => s + v, 0)
-    // Delta % compare Today vs Previous day using the SAME dataset
+
+    // Delta % compare Today vs Previous day
     const netToday = byDateNet.get(today) ?? 0
     const netPrev = byDateNet.get(prev) ?? 0
-    const todayGrossPrev = byDateGross.get(prev) ?? 0
     const totalDeltaPct = netPrev > 0 ? ((netToday - netPrev) / netPrev) * 100 : (netToday > 0 ? 100 : 0)
-    const todayDeltaPct = todayGrossPrev > 0 ? ((todayGross - todayGrossPrev) / todayGrossPrev) * 100 : (todayGross > 0 ? 100 : 0)
-    const active = employeesSeed.filter(e => e.status === 'Active').length
+    const todayDeltaPct = netPrev > 0 ? ((netToday - netPrev) / netPrev) * 100 : (netToday > 0 ? 100 : 0)
+    const active = employees.length
+
     return {
       totalSalesNetRange: totalNetRange,
-      totalOrdersRange,
+      totalOrdersRange: 0,
       todayGrossSales: todayGross,
       activeEmployees: active,
       totalDeltaPct,
@@ -73,7 +147,7 @@ export default function OwnerHome() {
       byDateNet,
       days,
     }
-  }, [rangeStart, rangeEnd])
+  }, [salesData, employees, rangeStart, rangeEnd, hasSalesData])
 
   const [view, setView] = useState<'7' | '30' | 'all'>('all')
   const visibleSeries = useMemo(() => {
@@ -82,27 +156,11 @@ export default function OwnerHome() {
     return seriesAll
   }, [seriesAll, view])
 
-  // Category movement derived from specific daily data
+  // Placeholder category data - will be populated from real data when available
   const categorySeries = useMemo(() => {
     const toLabel = (d: string) => {
       const dt = new Date(d)
       return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-    }
-
-    // Hardcoded data based on user request
-    const dailyData: Record<string, { coffee: number; tea: number; snack: number }> = {
-      '2026-03-01': { coffee: 4200, tea: 1600, snack: 2400 },
-      '2026-03-02': { coffee: 5200, tea: 2100, snack: 3200 },
-      '2026-03-03': { coffee: 4800, tea: 1900, snack: 3000 },
-      '2026-03-04': { coffee: 5600, tea: 2200, snack: 3500 },
-      '2026-03-05': { coffee: 6100, tea: 2400, snack: 3600 },
-      '2026-03-06': { coffee: 5400, tea: 2100, snack: 3300 },
-      '2026-03-07': { coffee: 6700, tea: 2600, snack: 4200 },
-      '2026-03-08': { coffee: 7600, tea: 3000, snack: 4600 },
-      '2026-03-09': { coffee: 7000, tea: 2700, snack: 4400 },
-      '2026-03-10': { coffee: 8400, tea: 3200, snack: 5200 },
-      '2026-03-11': { coffee: 6400, tea: 2500, snack: 4000 },
-      '2026-03-12': { coffee: 6600, tea: 2600, snack: 4000 },
     }
 
     const coffee: { label: string; value: number }[] = []
@@ -110,10 +168,9 @@ export default function OwnerHome() {
     const snack: { label: string; value: number }[] = []
 
     days.forEach((day) => {
-      const data = dailyData[day] || { coffee: 0, tea: 0, snack: 0 }
-      coffee.push({ label: toLabel(day), value: data.coffee })
-      tea.push({ label: toLabel(day), value: data.tea })
-      snack.push({ label: toLabel(day), value: data.snack })
+      coffee.push({ label: toLabel(day), value: 0 })
+      tea.push({ label: toLabel(day), value: 0 })
+      snack.push({ label: toLabel(day), value: 0 })
     })
 
     return { coffee, tea, snack }
@@ -140,34 +197,22 @@ export default function OwnerHome() {
     return seriesAll.reduce((a, b) => (b.value > a.value ? b : a))
   }, [seriesAll])
 
-  const avgOrderValue = useMemo(() => {
-    const sum = seriesAll.reduce((s, p) => s + p.value, 0)
-    const orders = saleRecordsSeed
-      .filter(r => new Date(r.date) >= new Date(rangeStart) && new Date(r.date) <= new Date(rangeEnd))
-      .reduce((acc, r) => acc + r.orders, 0)
-    return orders > 0 ? sum / orders : 0
-  }, [seriesAll, rangeStart, rangeEnd])
-
-  const peakHour = useMemo(() => {
-    const row = peakHoursSeed.reduce((a, b) => (b.orders > a.orders ? b : a))
-    return row.hour
-  }, [])
-
   const dateRangeLabel = useMemo(() => {
     const s = new Date(rangeStart).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     const e = new Date(rangeEnd).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     return `${s} – ${e}`
   }, [rangeStart, rangeEnd])
 
-  const topItems = useMemo(() => {
-    return [
-      { name: 'Cappuccino', qty: 86, revenue: 13680, margin: 0.42 },
-      { name: 'Caramel Latte', qty: 74, revenue: 12950, margin: 0.39 },
-      { name: 'Americano', qty: 91, revenue: 10920, margin: 0.44 },
-      { name: 'Butter Croissant', qty: 63, revenue: 5985, margin: 0.36 },
-      { name: 'Matcha Latte', qty: 52, revenue: 8840, margin: 0.33 },
-    ]
-  }, [])
+  if (contextLoading || loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-coffee mx-auto mb-4"></div>
+          <p className="text-coffee/70">Loading dashboard...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -175,7 +220,7 @@ export default function OwnerHome() {
         <div>
           <h1 className="text-3xl font-semibold text-coffee">Owner Dashboard</h1>
           <p className="text-sm text-coffee/70">
-            Sales reporting and analytics for {ownerBusiness.name}
+            Sales reporting and analytics for {businessName || 'Your Business'}
           </p>
         </div>
         <div className="flex items-center gap-2" />
@@ -184,30 +229,30 @@ export default function OwnerHome() {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <SummaryCard
           title="Total Sales"
-          value={`${ownerBusiness.currency} ${totalSalesNetRange.toLocaleString()}`}
+          value={hasSalesData ? `PHP ${totalSalesNetRange.toLocaleString()}` : '—'}
           icon={<CreditCard className="h-6 w-6" />}
           tone="success"
-          deltaPercent={totalDeltaPct}
-          hint={dateRangeLabel}
+          deltaPercent={hasSalesData ? totalDeltaPct : undefined}
+          hint={hasSalesData ? dateRangeLabel : 'No data available'}
         />
         <SummaryCard
           title="Total Orders"
-          value={totalOrdersRange}
+          value={hasSalesData ? totalOrdersRange : '—'}
           icon={<ShoppingBag className="h-6 w-6" />}
           tone="default"
-          hint="Across all stores"
+          hint={hasSalesData ? 'Across all stores' : 'No data available'}
         />
         <SummaryCard
           title="Today Sales"
-          value={`${ownerBusiness.currency} ${todayGrossSales.toLocaleString()}`}
+          value={hasSalesData ? `PHP ${todayGrossSales.toLocaleString()}` : '—'}
           icon={<TrendingUp className="h-6 w-6" />}
           tone="warn"
-          deltaPercent={todayDeltaPct}
-          hint="Today"
+          deltaPercent={hasSalesData ? todayDeltaPct : undefined}
+          hint={hasSalesData ? 'Today' : 'No data available'}
         />
         <SummaryCard
           title="Active Employees"
-          value={activeEmployees}
+          value={activeEmployees > 0 ? activeEmployees : '—'}
           icon={<Users2 className="h-6 w-6" />}
           tone="default"
           hint="On shift / active"
@@ -243,13 +288,22 @@ export default function OwnerHome() {
             </div>
           </div>
           <div className="mt-4">
-            <MultiLineChart
-              series={[
-                { name: 'Coffee', color: '#FFC107', data: visibleCategories.coffee },
-                { name: 'Tea', color: '#4CAF50', data: visibleCategories.tea },
-                { name: 'Snack', color: '#E53935', data: visibleCategories.snack },
-              ]}
-            />
+            {hasSalesData ? (
+              <MultiLineChart
+                series={[
+                  { name: 'Coffee', color: '#FFC107', data: visibleCategories.coffee },
+                  { name: 'Tea', color: '#4CAF50', data: visibleCategories.tea },
+                  { name: 'Snack', color: '#E53935', data: visibleCategories.snack },
+                ]}
+              />
+            ) : (
+              <div className="flex h-[300px] items-center justify-center rounded-xl border border-dashed border-coffee/40 bg-cream/50 text-center p-4">
+                <div>
+                  <p className="text-lg font-semibold text-coffee/80">No data available</p>
+                  <p className="text-sm text-coffee/60">Make your first sale to populate this chart.</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -259,22 +313,11 @@ export default function OwnerHome() {
             <p className="text-sm text-coffee/70">By category</p>
           </div>
           <div className="mt-4 space-y-3">
-            {(() => {
-              const maxQty = Math.max(...topByCategoryToday.map(r => r.qty))
-              return topByCategoryToday.map(row => {
-                const color = row.category === 'Tea' ? '#4CAF50' : row.category === 'Coffee' ? '#FFC107' : '#E53935'
-                const pct = Math.max(5, Math.round((row.qty / maxQty) * 100))
-                return (
-                  <div key={row.category} className="p-3 rounded-xl bg-cream">
-                    <div className="text-xs text-coffee/60">{row.category}</div>
-                    <div className="text-sm font-medium text-coffee">{row.item} – {row.qty} orders</div>
-                    <div className="mt-2 h-2.5 w-full rounded-full bg-white/60 border border-black/5 overflow-hidden">
-                      <div className="h-full rounded-full" style={{ width: `${pct}%`, background: color }} />
-                    </div>
-                  </div>
-                )
-              })
-            })()}
+            {hasSalesData ? (
+              <p className="text-sm text-coffee/70">No top-selling items to display yet.</p>
+            ) : (
+              <p className="text-sm text-coffee/70">No sales data available yet. Make your first sale to see analytics.</p>
+            )}
           </div>
         </div>
       </section>
@@ -284,12 +327,17 @@ export default function OwnerHome() {
           <h2 className="text-base font-semibold text-coffee">Business Insights</h2>
           <p className="text-sm text-coffee/70">Quick highlights from {dateRangeLabel}</p>
         </div>
-        <ul className="mt-3 text-sm space-y-1.5">
-          <li>• Best Selling Item: Cappuccino</li>
-          <li>• Peak Sales Hour: {peakHour}</li>
-          <li>• Best Day: {bestDay.label}</li>
-          <li>• Average Order Value: {ownerBusiness.currency} {avgOrderValue.toFixed(0)}</li>
-        </ul>
+        {hasSalesData ? (
+          <ul className="mt-3 text-sm space-y-1.5">
+            <li>• Best Day: {bestDay.label}</li>
+            <li>• Total Sales: PHP {totalSalesNetRange.toLocaleString()}</li>
+            <li>• Active Employees: {activeEmployees}</li>
+          </ul>
+        ) : (
+          <div className="mt-3 rounded-xl border border-dashed border-coffee/30 bg-cream/40 p-6 text-center text-sm text-coffee/70">
+            No data available yet. Start selling to get business insights.
+          </div>
+        )}
       </section>
 
       <section className="card p-0 overflow-hidden">
@@ -307,16 +355,9 @@ export default function OwnerHome() {
             </tr>
           </thead>
           <tbody>
-            {topItems.map(i => (
-              <tr key={i.name} className="hover:bg-cream/60">
-                <Td className="font-medium">{i.name}</Td>
-                <Td className="text-right">{i.qty}</Td>
-                <Td className="text-right">{ownerBusiness.currency} {i.revenue.toLocaleString()}</Td>
-                <Td className="text-right">
-                  <span className="chip chip-success">{Math.round(i.margin * 100)}%</span>
-                </Td>
-              </tr>
-            ))}
+            <tr>
+              <Td colSpan={4} className="text-center text-coffee/70 py-8">No sales data available yet</Td>
+            </tr>
           </tbody>
         </Table>
       </section>

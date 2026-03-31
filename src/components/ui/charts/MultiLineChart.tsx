@@ -14,6 +14,19 @@ export function MultiLineChart({
   series: Series[]
   height?: number
 }) {
+  const isEmpty = series.length === 0 || series.every(s => !s.data?.length)
+
+  if (isEmpty) {
+    return (
+      <div className="flex h-[300px] items-center justify-center rounded-xl border border-dashed border-coffee/40 bg-cream/50 text-center px-4">
+        <div>
+          <p className="text-lg font-semibold text-coffee/80">No data available</p>
+          <p className="text-sm text-coffee/60">Chart is unavailable until sales data is recorded.</p>
+        </div>
+      </div>
+    )
+  }
+
   const { paths, areas, min, max, gridLines, xLabels } = useMemo(() => {
     const w = 1000
     const h = 500

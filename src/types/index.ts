@@ -1,3 +1,13 @@
+export type Role = 'owner' | 'manager' | 'cashier' | 'admin'
+
+export interface User {
+  id: string
+  email: string
+  name: string
+  role: Role
+  businessId?: string
+}
+
 export type SubscriptionStatus = 'active' | 'expiring' | 'expired'
 
 export interface Business {

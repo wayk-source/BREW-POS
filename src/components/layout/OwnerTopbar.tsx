@@ -2,8 +2,11 @@ import { Bell, Search, Menu, User, LogOut, Settings } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { BrewPosLogo } from '../ui/BrewPosLogo'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { logout } from '@/lib/auth'
 
 export function OwnerTopbar({ expanded, onToggle }: { expanded?: boolean; onToggle?: () => void }) {
+  const router = useRouter()
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -78,13 +81,16 @@ export function OwnerTopbar({ expanded, onToggle }: { expanded?: boolean; onTogg
                   Account Settings
                 </Link>
                 
-                <Link 
-                  href="/owner/login" 
-                  className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-xl transition-colors mt-1"
+                <button
+                  onClick={async () => {
+                    await logout()
+                    router.push('/login')
+                  }}
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-xl transition-colors mt-1 w-full"
                 >
                   <LogOut className="h-4 w-4" />
                   Log Out
-                </Link>
+                </button>
               </div>
             )}
           </div>
